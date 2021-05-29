@@ -1,11 +1,17 @@
 <template>
   <div class="login-page">
     <h1>Login</h1>
-    <input type="text" v-model="username" placeholder="Nome de usuário" />
-    <br />
-    <input type="password" v-model="password" placeholder="Senha" />
-    <input type="submit" @click="login()" value="Entrar" />
-    <p v-if="isInvalid">Usuário ou senha incorretos</p>
+    <form @submit.prevent="login()">
+      <input
+        type="text"
+        v-model="viewModel.username"
+        placeholder="Nome de usuário"
+      />
+      <br />
+      <input type="password" v-model="viewModel.password" placeholder="Senha" />
+      <input type="submit" value="Entrar" />
+    </form>
+    <p v-if="viewModel.isInvalid">Usuário ou senha incorretos</p>
   </div>
 </template>
 
@@ -16,21 +22,16 @@ export default {
   name: "Login",
   data() {
     return {
-      username: "",
-      password: "",
-      isInvalid: false,
+      viewModel: new LoginViewModel(),
     };
-  },
-  mounted() {
-    this.viewModel = new LoginViewModel(this);
   },
   methods: {
     async login() {
       let token = await this.viewModel.login();
       if (token != null) {
-        console.log("Token " + token);
+        console.log("logar");
         // this.$store.dispatch("userToken", token);
-        this.$router.push("/");
+        this.$router.push({ name: "home" });
       }
     },
   },

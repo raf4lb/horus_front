@@ -1,24 +1,28 @@
-import AccountRepository from "../repositories/AccountRepository";
+import AccountRepository from "@/repositories/AccountRepository";
 
 export default class LoginViewModel {
-    constructor(view) {
-        this.view = view;
+    constructor() {
+        this.username = "";
+        this.password = "";
+        this.isInvalid = false;
         this.repository = new AccountRepository();
     }
 
     async login() {
         try {
-            let token = await this.repository.login(this.view.username, this.view.password);
+            let token = await this.repository.login(this.username, this.password);
+            // console.log(token);
             if (token == null) {
-                this.view.isInvalid = true;
+                this.isInvalid = true;
             }
             else {
-                this.view.isInvalid = false;
+                this.isInvalid = false;
             }
             return token;
         }
         catch (error) {
-            this.view.isInvalid = true;
+            this.isInvalid = true;
+            return null;
         }
     }
 }
