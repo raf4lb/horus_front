@@ -10,13 +10,15 @@ export default class HomeViewModel {
         this.selectedContact = null;
         this.inputName = '';
         this.inputTelephone = '';
-        this.isFormValid = true;
-        this.formErrors = [];
+        this.hasError = true;
+        this.errors = [];
         this.isLoading = true;
         this.isEditing = false;
         this.selectedContact = null;
         this.selectedContactIndex = null;
         this.isAuthenticated = false;
+        this.previousUrl = null;
+        this.nextUrl = null;
         this.accountRepository = new AccountRepository();
         this.contactRepository = new ContactRepository();
     }
@@ -37,23 +39,77 @@ export default class HomeViewModel {
 
     async getContacts() {
         this.isLoading = true;
-        this.contacts = await this.contactRepository.getContacts();
+        try {
+            let response = await this.contactRepository.getContacts();
+            this.contacts = response.results;
+            this.previousUrl = response.previous;
+            this.nextUrl = response.next;
+        }
+        catch (error) {
+            if (error.response.status == 400) {
+                this.hasError = false;
+                this.errors.push('Erro ao carregar contatos');
+            }
+        }
         this.isLoading = false;
     }
 
-    async addContact() {
-        this.isFormValid = this.validateForm();
-        if (this.isFormValid) {
-            let data = {
-                owner: this.user.id,
-                name: this.inputName,
-                telephone: this.inputTelephone,
+    async getPreviousContacts() {
+        if (this.previousUrl != null) {
+            try {
+                let response = await this.contactRepository.getContacts(this.previousUrl);
+                this.contacts = response.results;
+                this.previousUrl = response.previous;
+                this.nextUrl = response.next;
             }
-            let response = await this.contactRepository.addContact(data);
-            if (response instanceof Contact) this.contacts.push(response);
-            else {
-                this.isFormValid = false;
-                this.formErrors.push(response);
+            catch (error) {
+                if (error.response.status == 400) {
+                    this.hasError = false;
+                    this.errors.push('Erro ao carregar contatos');
+                }
+            }
+            this.isLoading = false;
+        }
+    }
+    async getNextContacts() {
+        if (this.nextUrl != null) {
+            try {
+                let response = await this.contactRepository.getContacts(this.nextUrl);
+                this.contacts = response.results;
+                this.previousUrl = response.previous;
+                this.nextUrl = response.next;
+            }
+            catch (error) {
+                if (error.response.status == 400) {
+                    this.hasError = false;
+                    this.errors.push('Erro ao carregar contatos');
+                }
+            }
+            this.isLoading = false;
+        }
+    }
+
+    async addContact() {
+        this.hasError = this.validateForm();
+        if (this.hasError) {
+            try {
+                let data = {
+                    owner: this.user.id,
+                    name: this.inputName,
+                    telephone: this.inputTelephone,
+                }
+                let response = await this.contactRepository.addContact(data);
+                if (response instanceof Contact) this.contacts.push(response);
+                else {
+                    this.hasError = false;
+                    this.errors.push(response);
+                }
+            }
+            catch (error) {
+                if (error.response.status == 400) {
+                    this.hasError = false;
+                    this.errors.push('Este telefone já está salvo na sua lista de contatos.');
+                }
             }
         }
     }
@@ -62,7 +118,7 @@ export default class HomeViewModel {
         let contact = this.contacts.find((element) => element.id == contactId);
         this.inputName = contact.name;
         this.inputTelephone = contact.telephone;
-        this.editing = true;
+        this.isEditing = true;
         this.selectedContact = contact;
         let index = this.contacts.findIndex((element) => element.id == contactId);
         this.selectedContactIndex = index;
@@ -72,8 +128,8 @@ export default class HomeViewModel {
 
     async editContact() {
         // console.log("edit " + this.selectedContact.name);
-        this.isFormValid = this.validateForm();
-        if (this.isFormValid) {
+        this.hasError = this.validateForm();
+        if (this.hasError) {
             const contactId = this.selectedContact.id;
             let data = {
                 owner: this.user.id,
@@ -81,13 +137,26 @@ export default class HomeViewModel {
                 name: this.inputName,
                 telephone: this.inputTelephone,
             }
-            let response = await this.contactRepository.editContact(contactId, data);
-            if (response instanceof Contact) this.contacts[this.selectedContactIndex] = response;
-            else {
-                this.isFormValid = false;
-                this.formErrors.push(response);
+            try {
+                let response = await this.contactRepository.editContact(contactId, data);
+                if (response instanceof Contact) {
+                    this.contacts[this.selectedContactIndex] = response;
+                    this.contacts.sort((a, b) => a.name.localeCompare(b.name)); // Sorting
+                    this.cancelEditContact();
+                }
+                else {
+                    this.hasError = true;
+                    this.errors.push('Não foi possível editar o contato.');
+                }
+
             }
-            this.cancelEditContact();
+            catch (error) {
+                if (error.response.status == 400) {
+                    this.hasError = true;
+                    this.errors.push('Este telefone já está salvo na sua lista de contatos.');
+                }
+            }
+
         }
     }
 
@@ -110,13 +179,14 @@ export default class HomeViewModel {
     }
 
     validateForm() {
-        this.formErrors = [];
-        if (this.inputName === '') this.formErrors.push('Campo nome não pode ser vazio');
-        if (this.inputTelephone === '') this.formErrors.push('Campo telefone não pode ser vazio');
-        if (isNaN(this.inputTelephone)) this.formErrors.push('Campo telefone deve conter apenas números');
-        if (this.inputTelephone.length != 11) this.formErrors.push('Campo telefone inválido');
+        this.errors = [];
+        if (this.inputName === '') this.errors.push('Campo nome não pode ser vazio');
+        if (this.inputTelephone === '') this.errors.push('Campo telefone não pode ser vazio');
+        if (isNaN(this.inputTelephone)) this.errors.push('Campo telefone deve conter apenas números');
+        if (this.inputTelephone.length != 11) this.errors.push('Campo telefone inválido');
 
-        if (this.formErrors.length > 0) return false;
+        if (this.errors.length > 0) return false;
         else return true;
     }
+
 }

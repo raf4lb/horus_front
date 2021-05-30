@@ -6,23 +6,23 @@
     <div v-else>
       <div v-if="viewModel.user" class="welcome">
         <h1>Bem-vindo, {{ viewModel.user.name }}!</h1>
-        <!-- <h1 v-else>Bem-vindo!</h1> -->
-        <input v-model="viewModel.inputName" type="text" placeholder="Nome" />
-        <input
-          v-model="viewModel.inputTelephone"
-          type="text"
-          placeholder="Telefone"
-        />
-        <input
-          v-if="!viewModel.editing"
-          type="submit"
-          value="Adicionar"
-          @click="addContact()"
-        />
-        <span v-else>
-          <input type="submit" value="Salvar" @click="editContact()" />
-          <input type="submit" value="Cancelar" @click="cancelEditContact()" />
-        </span>
+        <form @submit.prevent="submit()">
+          <input v-model="viewModel.inputName" type="text" placeholder="Nome" />
+          <input
+            v-model="viewModel.inputTelephone"
+            type="text"
+            placeholder="Telefone"
+          />
+          <input v-if="!viewModel.isEditing" type="submit" value="Adicionar" />
+          <span v-else>
+            <input type="submit" value="Salvar" />
+            <input
+              type="button"
+              value="Cancelar"
+              @click="cancelEditContact()"
+            />
+          </span>
+        </form>
         <table id="contacts-list">
           <tbody>
             <tr v-for="contact in viewModel.contacts" :key="contact.id">
@@ -45,20 +45,24 @@
             </tr>
           </tbody>
         </table>
+        <input
+          v-if="viewModel.previousUrl"
+          type="button"
+          value="Anterior"
+          @click="getPreviousContacts()"
+        />
+        <input v-else type="button" value="Anterior" disabled />
+        <input
+          v-if="viewModel.nextUrl"
+          type="button"
+          value="Próximo"
+          @click="getNextContacts()"
+        />
+        <input v-else type="button" value="Próximo" disabled />
 
-        <p v-if="viewModel.errorCreatingContact">
-          Não foi possível criar o contato
-        </p>
-        <p v-if="viewModel.errorDeletingContact">
-          Não foi possível excluir o contato
-        </p>
-        <p v-if="viewModel.errorEditingContact">
-          Não foi possível editar o contato
-        </p>
-        <div v-if="!viewModel.isFormValid">
-          <p>Formulário inválido</p>
+        <div v-if="viewModel.hasError">
           <ul>
-            <li v-for="error in viewModel.formErrors" :key="error">
+            <li v-for="error in viewModel.errors" :key="error">
               {{ error }}
             </li>
           </ul>
@@ -113,6 +117,16 @@ export default {
     async logout() {
       await this.viewModel.logout();
       this.$router.push({ name: "login" });
+    },
+    submit() {
+      if (this.viewModel.isEditing) this.editContact();
+      else this.addContact();
+    },
+    async getPreviousContacts() {
+      await this.viewModel.getPreviousContacts();
+    },
+    async getNextContacts() {
+      await this.viewModel.getNextContacts();
     },
   },
 };

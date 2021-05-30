@@ -8,76 +8,59 @@ export default class ContactRepository {
         this.headers = {
             Authorization: 'Token ' + localStorage.token,
         }
-
     }
 
-    async getContacts() {
-        try {
-            let response = await ApiContacts.get(this.contactsEndpoint, {
-                headers: this.headers
-            });
-            if (response.status == 200) {
-                return response.data.results;
-            }
-            else return null;
+    async getContacts(url = null) {
+        if (url == null) {
+            url = this.contactsEndpoint;
         }
-        catch (error) {
-            return error;
+        let response = await ApiContacts.get(url, {
+            headers: this.headers
+        });
+        if (response.status == 200) {
+            return response.data;
         }
+        else return response;
     }
 
     async addContact(data) {
-        try {
-            let response = await ApiContacts.post(this.contactsEndpoint, data, {
-                headers: this.headers
+        let response = await ApiContacts.post(this.contactsEndpoint, data, {
+            headers: this.headers
+        });
+        if (response.status == 201) {
+            let contact = new Contact({
+                id: response.data.id,
+                name: response.data.name,
+                telephone: response.data.telephone,
             });
-            if (response.status == 201) {
-                let contact = new Contact({
-                    id: response.data.id,
-                    name: response.data.name,
-                    telephone: response.data.telephone,
-                });
-                return contact;
-            }
-            else return response.status;
+            return contact;
         }
-        catch (error) {
-            return error;
-        }
+        else return response;
     }
 
     async editContact(contactId, data) {
         let response = await ApiContacts.put(this.contactsEndpoint + `${contactId}/`, data, {
             headers: this.headers
         });
-        try {
-            if (response.status == 200) {
-                let contact = new Contact({
-                    id: response.data.id,
-                    name: response.data.name,
-                    telephone: response.data.telephone,
-                });
-                return contact;
-            }
-            else return response.status;
+
+        if (response.status == 200) {
+            let contact = new Contact({
+                id: response.data.id,
+                name: response.data.name,
+                telephone: response.data.telephone,
+            });
+            return contact;
         }
-        catch (error) {
-            return error;
-        }
+        else return response;
     }
 
     async deleteContact(contactId) {
-        try {
-            let response = await ApiContacts.delete(this.contactsEndpoint + `${contactId}`, {
-                headers: this.headers
-            });
-            if (response.status == 204) {
-                return true;
-            }
-            else return false;
+        let response = await ApiContacts.delete(this.contactsEndpoint + `${contactId}`, {
+            headers: this.headers
+        });
+        if (response.status == 204) {
+            return true;
         }
-        catch (error) {
-            return error;
-        }
+        else return response;
     }
 }
