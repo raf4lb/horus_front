@@ -1,5 +1,6 @@
 import AccountRepository from "@/repositories/AccountRepository"
 import ContactRepository from "@/repositories/ContactRepository";
+import Contact from "../models/ContactModel";
 
 
 export default class HomeViewModel {
@@ -9,8 +10,6 @@ export default class HomeViewModel {
         this.selectedContact = null;
         this.inputName = '';
         this.inputTelephone = '';
-        this.errorDeletingContact = false;
-        this.errorEditingContact = false;
         this.isFormValid = true;
         this.formErrors = [];
         this.isLoading = true;
@@ -28,6 +27,7 @@ export default class HomeViewModel {
 
     async getUserAuthenticated() {
         this.user = await this.accountRepository.getUserAuthenticated();
+        // console.log(this.user);
         return this.user;
     }
 
@@ -37,18 +37,24 @@ export default class HomeViewModel {
 
     async getContacts() {
         this.isLoading = true;
-        this.contacts = await this.contactRepository.getContacts(this.user.id);
+        this.contacts = await this.contactRepository.getContacts();
         this.isLoading = false;
     }
 
     async addContact() {
         this.isFormValid = this.validateForm();
         if (this.isFormValid) {
-            this.contacts.push({
-                id: 4,
+            let data = {
+                owner: this.user.id,
                 name: this.inputName,
                 telephone: this.inputTelephone,
-            });
+            }
+            let response = await this.contactRepository.addContact(data);
+            if (response instanceof Contact) this.contacts.push(response);
+            else {
+                this.isFormValid = false;
+                this.formErrors.push(response);
+            }
         }
     }
 
@@ -70,12 +76,17 @@ export default class HomeViewModel {
         if (this.isFormValid) {
             const contactId = this.selectedContact.id;
             let data = {
+                owner: this.user.id,
                 id: contactId,
                 name: this.inputName,
                 telephone: this.inputTelephone,
             }
-            let contact = await this.contactRepository.editContact(contactId, data);
-            this.contacts[this.selectedContactIndex] = contact;
+            let response = await this.contactRepository.editContact(contactId, data);
+            if (response instanceof Contact) this.contacts[this.selectedContactIndex] = response;
+            else {
+                this.isFormValid = false;
+                this.formErrors.push(response);
+            }
             this.cancelEditContact();
         }
     }

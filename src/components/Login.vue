@@ -29,7 +29,7 @@ export default {
     async login() {
       let token = await this.viewModel.login();
       if (token != null) {
-        console.log("logar");
+        // console.log("token " + token);
         // this.$store.dispatch("userToken", token);
         this.$router.push({ name: "home" });
       }

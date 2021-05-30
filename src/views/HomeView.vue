@@ -23,21 +23,32 @@
           <input type="submit" value="Salvar" @click="editContact()" />
           <input type="submit" value="Cancelar" @click="cancelEditContact()" />
         </span>
-        <ul id="contacts-list">
-          <li v-for="contact in viewModel.contacts" :key="contact.id">
-            {{ contact.name }} - {{ contact.telephone }}
-            <input
-              type="button"
-              value="editar"
-              @click="editingContact(contact.id)"
-            />
-            <input
-              type="button"
-              value="excluir"
-              @click="deleteContact(contact.id)"
-            />
-          </li>
-        </ul>
+        <table id="contacts-list">
+          <tbody>
+            <tr v-for="contact in viewModel.contacts" :key="contact.id">
+              <td>{{ contact.name }}</td>
+              <td>{{ contact.telephone }}</td>
+              <td>
+                <input
+                  type="button"
+                  value="editar"
+                  @click="editingContact(contact.id)"
+                />
+              </td>
+              <td>
+                <input
+                  type="button"
+                  value="excluir"
+                  @click="deleteContact(contact.id)"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p v-if="viewModel.errorCreatingContact">
+          Não foi possível criar o contato
+        </p>
         <p v-if="viewModel.errorDeletingContact">
           Não foi possível excluir o contato
         </p>
@@ -72,8 +83,9 @@ export default {
     this.getUserAuthenticated().then((response) => {
       if (response == null) {
         this.$router.push({ name: "login" });
+      } else {
+        this.getContacts();
       }
-      this.getContacts();
     });
   },
   methods: {

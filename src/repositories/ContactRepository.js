@@ -1,30 +1,83 @@
 import Contact from "../models/ContactModel"
-import { API } from '@/services/Api'
+import { ApiContacts } from '@/services/Api'
 
 export default class ContactRepository {
     constructor() {
-        this.contactsEndpoint = 'contacts';
-        this.contacts = [
-            // new Contact({ id: 1, name: 'Rafael', telephone: '88999034444' }),
-            // new Contact(2, 'Francisco', '88999034443'),
-            // new Contact(3, 'Antônio', '88999034442'),
-        ];
+        this.contactsEndpoint = 'contacts/';
+        this.token = localStorage.token;
+        this.headers = {
+            Authorization: 'Token ' + localStorage.token,
+        }
+
     }
 
-    async getContacts(userId) {
-        // await new Promise((resolve) => { setTimeout(resolve, 500) });
-        let response = await API.get(this.contactsEndpoint);
-        this.contacts = response.data.results;
-        return this.contacts;
+    async getContacts() {
+        try {
+            let response = await ApiContacts.get(this.contactsEndpoint, {
+                headers: this.headers
+            });
+            if (response.status == 200) {
+                return response.data.results;
+            }
+            else return null;
+        }
+        catch (error) {
+            return error;
+        }
+    }
+
+    async addContact(data) {
+        try {
+            let response = await ApiContacts.post(this.contactsEndpoint, data, {
+                headers: this.headers
+            });
+            if (response.status == 201) {
+                let contact = new Contact({
+                    id: response.data.id,
+                    name: response.data.name,
+                    telephone: response.data.telephone,
+                });
+                return contact;
+            }
+            else return response.status;
+        }
+        catch (error) {
+            return error;
+        }
     }
 
     async editContact(contactId, data) {
-        await new Promise((resolve) => { setTimeout(resolve, 500) });
-        return data;
+        let response = await ApiContacts.put(this.contactsEndpoint + `${contactId}/`, data, {
+            headers: this.headers
+        });
+        try {
+            if (response.status == 200) {
+                let contact = new Contact({
+                    id: response.data.id,
+                    name: response.data.name,
+                    telephone: response.data.telephone,
+                });
+                return contact;
+            }
+            else return response.status;
+        }
+        catch (error) {
+            return error;
+        }
     }
 
     async deleteContact(contactId) {
-        await new Promise((resolve) => { setTimeout(resolve, 500) });
-        return true;
+        try {
+            let response = await ApiContacts.delete(this.contactsEndpoint + `${contactId}`, {
+                headers: this.headers
+            });
+            if (response.status == 204) {
+                return true;
+            }
+            else return false;
+        }
+        catch (error) {
+            return error;
+        }
     }
 }
