@@ -1,5 +1,5 @@
 # Aplicação Frontend do Desafio Horus
-Frontend para consumir uma api de lista de contatos. A aplicação foi implementada usando Vue.js e possui os seguintes recursos:
+Frontend para consumir uma api de lista de contatos. A aplicação foi implementada usando Vue.js e possui os seguintes padrões:
 - Arquitetura MVVM;
 - Repository Pattern.
 
