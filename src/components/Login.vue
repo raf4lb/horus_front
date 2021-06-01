@@ -1,17 +1,48 @@
 <template>
-  <div class="login-page">
-    <h1>Login</h1>
-    <form @submit.prevent="login()">
-      <input
-        type="text"
-        v-model="viewModel.username"
-        placeholder="Nome de usuário"
-      />
-      <br />
-      <input type="password" v-model="viewModel.password" placeholder="Senha" />
-      <input type="submit" value="Entrar" />
-    </form>
-    <p v-if="viewModel.isInvalid">Usuário ou senha incorretos</p>
+  <div class="container">
+    <div class="row justify-content-md-center">
+      <form
+        @submit.prevent="login()"
+        class="col-lg-4 col-offset-4"
+        style="margin-top: 15%"
+      >
+        <h2>Meus Contatos</h2>
+        <br />
+        <div class="mb-3">
+          <input
+            v-model="viewModel.username"
+            type="text"
+            class="form-control"
+            id="inputUsername"
+            aria-describedby="usernameHelp"
+            placeholder="Nome de usuário"
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            v-model="viewModel.password"
+            type="password"
+            class="form-control"
+            id="inputPassword"
+            placeholder="Senha"
+          />
+        </div>
+        <input type="submit" class="btn btn-primary" value="Entrar" />
+        <br />
+        <br />
+        <div v-if="viewModel.isInvalid">
+          <div class="alert alert-danger" role="alert">
+            <i class="fa fa-exclamation-triangle"></i>
+            Usuário ou senha incorretos.
+          </div>
+          <div class="alert alert-info" role="alert">
+            <i class="fa fa-info-circle"></i> Acesso de demonstração<br />
+            <b>nome de usuário</b>: horus<br />
+            <b>senha</b>: horus12345678
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 

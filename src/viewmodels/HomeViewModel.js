@@ -10,8 +10,9 @@ export default class HomeViewModel {
         this.selectedContact = null;
         this.inputName = '';
         this.inputTelephone = '';
-        this.hasError = true;
+        this.hasError = false;
         this.errors = [];
+        this.notifications = [];
         this.isLoading = true;
         this.isEditing = false;
         this.selectedContact = null;
@@ -21,6 +22,7 @@ export default class HomeViewModel {
         this.nextUrl = null;
         this.accountRepository = new AccountRepository();
         this.contactRepository = new ContactRepository();
+        this.paginationSize = 10;
     }
 
     async isAuthenticated() {
@@ -28,9 +30,13 @@ export default class HomeViewModel {
     }
 
     async getUserAuthenticated() {
-        this.user = await this.accountRepository.getUserAuthenticated();
-        // console.log(this.user);
-        return this.user;
+        try {
+            this.user = await this.accountRepository.getUserAuthenticated();
+            return this.user;
+        }
+        catch (error) {
+            if (error.response.status == 401) this.logout();
+        }
     }
 
     async logout() {
@@ -44,6 +50,7 @@ export default class HomeViewModel {
             this.contacts = response.results;
             this.previousUrl = response.previous;
             this.nextUrl = response.next;
+            this.clearErrors();
         }
         catch (error) {
             if (error.response.status == 400) {
@@ -61,6 +68,7 @@ export default class HomeViewModel {
                 this.contacts = response.results;
                 this.previousUrl = response.previous;
                 this.nextUrl = response.next;
+                this.clearErrors();
             }
             catch (error) {
                 if (error.response.status == 400) {
@@ -78,6 +86,7 @@ export default class HomeViewModel {
                 this.contacts = response.results;
                 this.previousUrl = response.previous;
                 this.nextUrl = response.next;
+                this.clearErrors();
             }
             catch (error) {
                 if (error.response.status == 400) {
@@ -90,8 +99,8 @@ export default class HomeViewModel {
     }
 
     async addContact() {
-        this.hasError = this.validateForm();
-        if (this.hasError) {
+        this.validateForm();
+        if (!this.hasError) {
             try {
                 let data = {
                     owner: this.user.id,
@@ -99,15 +108,20 @@ export default class HomeViewModel {
                     telephone: this.inputTelephone,
                 }
                 let response = await this.contactRepository.addContact(data);
-                if (response instanceof Contact) this.contacts.push(response);
+                if (response instanceof Contact) {
+                    this.clearForm()
+                    this.getContacts();
+                    this.clearErrors();
+                    this.addNotification('Contato adicionado.')
+                }
                 else {
-                    this.hasError = false;
-                    this.errors.push(response);
+                    this.hasError = true;
+                    this.errors.push('Não foi possível adicionar o contato.');
                 }
             }
             catch (error) {
                 if (error.response.status == 400) {
-                    this.hasError = false;
+                    this.hasError = true;
                     this.errors.push('Este telefone já está salvo na sua lista de contatos.');
                 }
             }
@@ -115,21 +129,15 @@ export default class HomeViewModel {
     }
 
     editingContact(contactId) {
-        let contact = this.contacts.find((element) => element.id == contactId);
-        this.inputName = contact.name;
-        this.inputTelephone = contact.telephone;
+        this.selectContact(contactId);
+        this.inputName = this.selectedContact.name;
+        this.inputTelephone = this.selectedContact.telephone;
         this.isEditing = true;
-        this.selectedContact = contact;
-        let index = this.contacts.findIndex((element) => element.id == contactId);
-        this.selectedContactIndex = index;
-        // console.log("editing " + contact.name);
-
     }
 
     async editContact() {
-        // console.log("edit " + this.selectedContact.name);
-        this.hasError = this.validateForm();
-        if (this.hasError) {
+        this.validateForm();
+        if (!this.hasError) {
             const contactId = this.selectedContact.id;
             let data = {
                 owner: this.user.id,
@@ -140,9 +148,9 @@ export default class HomeViewModel {
             try {
                 let response = await this.contactRepository.editContact(contactId, data);
                 if (response instanceof Contact) {
-                    this.contacts[this.selectedContactIndex] = response;
-                    this.contacts.sort((a, b) => a.name.localeCompare(b.name)); // Sorting
+                    this.getContacts();
                     this.cancelEditContact();
+                    this.clearErrors();
                 }
                 else {
                     this.hasError = true;
@@ -160,33 +168,71 @@ export default class HomeViewModel {
         }
     }
 
-    cancelEditContact() {
-        this.editing = false;
+    clearForm() {
+        this.isEditing = false;
         this.inputName = '';
         this.inputTelephone = '';
     }
 
-    async deleteContact(contactId) {
-        this.cancelEditContact();
-        let index = this.contacts.findIndex((element) => element.id == contactId);
-        let deleted = await this.contactRepository.deleteContact(contactId);
+    cancelEditContact() {
+        this.clearForm();
+        this.clearErrors();
+        this.clearSelectedContact();
+    }
+
+    deletingContact(contactId) {
+        this.selectContact(contactId);
+    }
+
+    async deleteContact() {
+        let deleted = await this.contactRepository.deleteContact(this.selectedContact.id);
         if (deleted) {
-            this.contacts.splice(index, 1);
-            this.errorDeletingContact = false;
+            this.contacts.splice(this.selectedContactIndex, 1);
+            this.getContacts();
+            this.clearErrors();
+            this.addNotification('Contato excluído');
         } else {
-            this.errorDeletingContact = true;
+            this.hasError = true;
+            this.errors.push('Não foi possível excluir o contato.');
         }
     }
 
     validateForm() {
+        this.hasError = false;
         this.errors = [];
-        if (this.inputName === '') this.errors.push('Campo nome não pode ser vazio');
-        if (this.inputTelephone === '') this.errors.push('Campo telefone não pode ser vazio');
-        if (isNaN(this.inputTelephone)) this.errors.push('Campo telefone deve conter apenas números');
-        if (this.inputTelephone.length != 11) this.errors.push('Campo telefone inválido');
+        if (this.inputName == '') this.errors.push('Campo nome não pode ser vazio');
+        if (this.inputTelephone == '') this.errors.push('Campo telefone não pode ser vazio');
+        else if (isNaN(this.inputTelephone)) this.errors.push('Campo telefone deve conter apenas números');
+        else if (this.inputTelephone.length != 11) this.errors.push('Campo telefone inválido');
 
-        if (this.errors.length > 0) return false;
-        else return true;
+        if (this.errors.length > 0) this.hasError = true;
+        else this.hasError = false;
     }
 
+    selectContact(contactId) {
+        let contact = this.contacts.find((element) => element.id == contactId);
+        this.selectedContact = contact;
+        let index = this.contacts.findIndex((element) => element.id == contactId);
+        this.selectedContactIndex = index;
+    }
+
+    clearSelectedContact() {
+        this.selectedContactIndex = null;
+        this.selectedContact = null;
+    }
+
+    clearErrors() {
+        this.hasError = false;
+        this.errors = [];
+    }
+
+    addNotification(text) {
+        // this.notifications.push(text);
+        // let index = this.notifications.findIndex(text);
+        // setTimeout(() => {
+        //     this.notifications.splice(index, 1);
+        // },
+        //     5000,
+        // )
+    }
 }

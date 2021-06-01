@@ -1,4 +1,4 @@
-# horus_challenge_front
+# Desafio Horus Frontend
 
 ## Project setup
 ```
