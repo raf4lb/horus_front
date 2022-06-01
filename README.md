@@ -1,39 +1,39 @@
-# Aplicação Frontend do Desafio Horus
-Frontend para consumir uma api de lista de contatos. A aplicação foi implementada usando Vue.js e possui os seguintes padrões:
-- Arquitetura MVVM;
+# Contacts Management Frontend
+Frontend application for managing contacts. The application was built using Vue.js and with following the patterns:
+- MVVM Pattern;
 - Repository Pattern.
 
-## Requerimentos
+## Requirements
  - Node.js 12.18.4;
  - Vue.js 3;
 
-## Instalação
+## Installing
 
-Para instalar a aplicação, basta executar o seguinte comando na pasta do projeto:
+To install the application, run the following commands in the project root folder:
 ```
 npm install
 ```
 
-## Rodando
-Para rodar a aplicação, basta executar o seguinte comando na pasta do projeto:
+## Running
+To run the application, execute the following commands in the project root folder:
 ```
 npm run serve
 ```
 
-A aplicação estará acessível no endereço http://127.0.0.1:8080
+The application will be available at http://127.0.0.1:8080
 
-## Utilizando a Aplicação
-Para ter acesso à lista de contatos, é necessário que o usuário esteja autenticado. Sendo assim, a primeira tela contém um formulário de autenticação. As credenciais do acesso de demonstração são:
-- Usuário: horus
-- Senha: horus12345678
+## Using the Application
+An authenticated user is required to access to the contacts list. So, the first screen is a login form. The demo credentials are:
+- User: horus
+- Password: horus12345678
 
-Depois de autenticado, o usuário é redirecionado para a página de listagem de contatos.
+The user will be redirected to the contacts listing page after authentication.
 
-### Adicionar um novo contato
-Para adicionar um novo contato, o usuário deve clicar no botão "Adicionar", preencher os campos nome e telefone e por fim clicar no botão "Adicionar".
+### Add a contact
+To add a contact, the user must click on the "Adicionar" button, fill the "nome" (name) and "telefone" (phone) fields and then click on the "Adicionar" button.
 
-### Editar um contato
-Para editar um contato, o usuário deve clicar no botão editar, localizado na coluna "Editar" da lista de contatos, referente ao contato. Um formulário de edição surgirá. O usuário deve alterar os campos necessários e clicar no botão "Salvar".
+### Update a contact
+To update a contact, the user must click on the "Editar" button, located at the "Editar" column of the contacts list according to the contact. An edit form will appear. The user must change the required fields and click on the "Salvar" button. 
 
-### Excluir um contato
-Para excluir um contato, o usuário deve clicar no botão excluir, localizado na coluna "Excluir" da lista de contatos, referente ao contato. Uma confirmação de exclusão surgirá. O usuário deve clicar no botão "Excluir".
+### Delete a contact
+To delete a contact, the user must click on the "Excluir" button, located at the "Excluir" column of the contacts list according to the contact. When the confirmation is presented the user must click on the "Excluir" button.
